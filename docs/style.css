@@ -18,6 +18,8 @@ h2 { margin: 0; font-size: clamp(2rem, 6vw, 4rem); letter-spacing: -.045em; line
 .feature-card strong { margin-top: 2rem; font-size: clamp(1.8rem, 4vw, 2.5rem); letter-spacing: -.04em; }
 .description { margin-top: .75rem; color: #6e5b4f; line-height: 1.65; }
 .action { margin-top: auto; padding-top: 2rem; font-size: .95rem; font-weight: 700; }
+.admin-footer { position: fixed; right: 1rem; bottom: 1rem; z-index: 3; }
+.admin-footer a { display: block; padding: .55rem .75rem; border: 1px solid rgb(83 57 43 / 12%); border-radius: 2rem; background: rgb(255 253 249 / 75%); color: #78665a; font-size: .72rem; font-weight: 700; text-decoration: none; backdrop-filter: blur(.5rem); }
 @keyframes dissolve { to { visibility: hidden; opacity: 0; filter: blur(.45rem); transform: scale(.98); } }
 @keyframes reveal { to { visibility: visible; opacity: 1; transform: translateY(0); } }
 @media (max-width: 640px) { .home { align-items: start; padding-block: 4rem 2rem; } .intro { align-self: center; } .feature-picker { position: relative; } .feature-grid { grid-template-columns: 1fr; } .feature-card { min-height: 15rem; } }
