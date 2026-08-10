@@ -16,7 +16,8 @@ export async function GET() {
       db.select({ theme: usageEvents.theme, value: count() }).from(usageEvents).where(sql`${usageEvents.theme} is not null`).groupBy(usageEvents.theme).orderBy(desc(count())).limit(5),
     ]);
     return Response.json({ users: users.value, stories: allStories.value, todayStories: todayStories.value, conversations: voice.value, themes });
-  } catch {
+  } catch (error) {
+    console.error("StoryDaddy stats database error", error);
     return Response.json({ users: 0, stories: 0, todayStories: 0, conversations: 0, themes: [], initializing: true });
   }
 }
