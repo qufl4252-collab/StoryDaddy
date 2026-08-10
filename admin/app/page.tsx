@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 type DashboardStats = { users: number; stories: number; todayStories: number; conversations: number; themes: Array<{ theme: string | null; value: number }>; initializing?: boolean };
 
 async function loadStats(): Promise<DashboardStats> {
@@ -8,8 +12,11 @@ async function loadStats(): Promise<DashboardStats> {
   } catch { return { users: 0, stories: 0, todayStories: 0, conversations: 0, themes: [], initializing: true }; }
 }
 
-export default async function AdminHome() {
-  const data = await loadStats();
+const emptyStats: DashboardStats = { users: 0, stories: 0, todayStories: 0, conversations: 0, themes: [] };
+
+export default function AdminHome() {
+  const [data, setData] = useState<DashboardStats>(emptyStats);
+  useEffect(() => { void loadStats().then(setData); }, []);
   const stats = [
     { label: "오늘 만든 동화", value: String(data.todayStories), change: "오늘 자정부터" },
     { label: "동화 대화", value: String(data.conversations), change: "누적 시작 횟수" },
