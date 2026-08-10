@@ -1,9 +1,11 @@
 import { count, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { anonymousUsers, stories, usageEvents } from "../../../db/schema";
+import { ensureDatabase } from "../../../db/ensure";
 
 export async function GET() {
   try {
+    await ensureDatabase();
     const db = getDb();
     const start = new Date(); start.setHours(0, 0, 0, 0);
     const [[users], [allStories], [todayStories], [voice], themes] = await Promise.all([

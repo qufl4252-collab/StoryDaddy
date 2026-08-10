@@ -1,5 +1,6 @@
 import { getDb } from "../../../db";
 import { anonymousUsers, usageEvents } from "../../../db/schema";
+import { ensureDatabase } from "../../../db/ensure";
 
 export async function POST(request: Request) {
   try {
@@ -7,6 +8,7 @@ export async function POST(request: Request) {
     if (!body.anonymousUserId || !body.eventType) {
       return Response.json({ error: "필수 정보가 없습니다." }, { status: 400 });
     }
+    await ensureDatabase();
     const db = getDb();
     const now = new Date();
     await db.insert(anonymousUsers).values({ id: body.anonymousUserId, createdAt: now, lastSeenAt: now })

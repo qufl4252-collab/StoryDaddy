@@ -1,5 +1,6 @@
 import { getDb } from "../../../../db";
 import { anonymousUsers, stories, usageEvents } from "../../../../db/schema";
+import { ensureDatabase } from "../../../../db/ensure";
 
 type Story = { title: string; theme: string; pages: string[] };
 
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
     const story = JSON.parse(raw) as Story;
     if (!story.title || !Array.isArray(story.pages) || story.pages.length < 2) throw new Error("잘못된 동화 형식");
 
+    await ensureDatabase();
     const db = getDb();
     const now = new Date();
     await db.insert(anonymousUsers).values({ id: body.anonymousUserId, createdAt: now, lastSeenAt: now })
