@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fff8ea;
+  --foreground: #332a25;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), "Apple SD Gothic Neo", sans-serif;
+}
+
+.home {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  overflow: hidden;
+  padding: 2rem;
+  text-align: center;
+}
+
+.welcome {
+  position: relative;
+  z-index: 1;
+  max-width: 44rem;
+}
+
+.eyebrow {
+  margin: 0 0 1rem;
+  color: #9a6845;
+  font-size: clamp(0.85rem, 2vw, 1rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.8rem, 9vw, 6rem);
+  font-weight: 750;
+  letter-spacing: -0.055em;
+  line-height: 1.05;
+}
+
+.status {
+  margin: 1.5rem 0 0;
+  color: #78665a;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+}
+
+.moon {
+  position: absolute;
+  right: max(-5rem, -8vw);
+  top: max(-6rem, -8vw);
+  width: clamp(15rem, 36vw, 34rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #ffd983;
+  box-shadow: 0 0 7rem rgb(255 211 118 / 38%);
+  opacity: 0.72;
+}
