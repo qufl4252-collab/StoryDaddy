@@ -3,7 +3,7 @@ import { getDb } from "../../../db";
 import { anonymousUsers, stories, usageEvents } from "../../../db/schema";
 import { ensureDatabase } from "../../../db/ensure";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await ensureDatabase();
     const db = getDb();
@@ -18,6 +18,7 @@ export async function GET() {
     return Response.json({ users: users.value, stories: allStories.value, todayStories: todayStories.value, conversations: voice.value, themes });
   } catch (error) {
     console.error("StoryDaddy stats database error", error);
-    return Response.json({ users: 0, stories: 0, todayStories: 0, conversations: 0, themes: [], initializing: true });
+    const diagnostic = new URL(request.url).searchParams.get("diagnostic") === "storydaddy-db";
+    return Response.json({ users: 0, stories: 0, todayStories: 0, conversations: 0, themes: [], initializing: true, ...(diagnostic ? { diagnostic: error instanceof Error ? error.message : String(error) } : {}) });
   }
 }
