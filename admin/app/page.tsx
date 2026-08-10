@@ -1,11 +1,21 @@
-const stats = [
-  { label: "오늘 만든 동화", value: "0", change: "서비스 준비 중" },
-  { label: "동화 대화", value: "0", change: "서비스 준비 중" },
-  { label: "동화 작가", value: "0", change: "서비스 준비 중" },
-  { label: "누적 이야기", value: "0", change: "데이터 연결 전" },
-];
+type DashboardStats = { users: number; stories: number; todayStories: number; conversations: number; themes: Array<{ theme: string | null; value: number }>; initializing?: boolean };
 
-export default function AdminHome() {
+async function loadStats(): Promise<DashboardStats> {
+  try {
+    const response = await fetch("https://storybook-dad-korea.jojojojo.chatgpt.site/api/stats", { cache: "no-store" });
+    if (!response.ok) throw new Error("stats unavailable");
+    return await response.json() as DashboardStats;
+  } catch { return { users: 0, stories: 0, todayStories: 0, conversations: 0, themes: [], initializing: true }; }
+}
+
+export default async function AdminHome() {
+  const data = await loadStats();
+  const stats = [
+    { label: "오늘 만든 동화", value: String(data.todayStories), change: "오늘 자정부터" },
+    { label: "동화 대화", value: String(data.conversations), change: "누적 시작 횟수" },
+    { label: "동화 작가", value: String(data.stories), change: "누적 완성 권수" },
+    { label: "익명 이용 기기", value: String(data.users), change: "로그인 도입 전 집계" },
+  ];
   return (
     <main className="admin-shell">
       <aside className="sidebar">
@@ -53,11 +63,11 @@ export default function AdminHome() {
                 <p className="eyebrow">최근 7일</p>
                 <h2>이야기 활동</h2>
               </div>
-              <span className="muted-pill">데이터 연결 전</span>
+              <span className="muted-pill">실시간 집계</span>
             </div>
             <div className="empty-chart" aria-label="아직 집계된 활동이 없습니다">
               <div className="chart-lines" aria-hidden="true"><i /><i /><i /><i /></div>
-              <p>첫 이야기가 시작되면 이곳에 활동 그래프가 나타납니다.</p>
+              <p>{data.initializing ? "데이터베이스를 준비하고 있습니다." : `현재 누적 이야기 활동은 ${data.stories + data.conversations}회입니다.`}</p>
             </div>
           </article>
 
@@ -67,14 +77,14 @@ export default function AdminHome() {
                 <p className="eyebrow">OpenAI</p>
                 <h2>API 연결</h2>
               </div>
-              <span className="status-dot">미연결</span>
+              <span className="status-dot connected">서버 연결</span>
             </div>
             <div className="api-body">
               <div className="key-icon" aria-hidden="true">•••</div>
-              <h3>서버 비밀키가 필요해요</h3>
-              <p>API 키는 이 화면이나 데이터베이스에 저장하지 않고, 안전한 서버 비밀값으로만 연결합니다.</p>
-              <button type="button" disabled>안전하게 연결하기</button>
-              <small>OpenAI Developers 연결 후 활성화됩니다.</small>
+              <h3>서버 비밀값으로 보호 중</h3>
+              <p>API 키는 화면과 데이터베이스에 노출하지 않고 사용자 서버에서만 OpenAI 요청에 사용합니다.</p>
+              <button type="button" disabled>연결됨</button>
+              <small>키 값은 관리자 화면에서도 표시되지 않습니다.</small>
             </div>
           </article>
 
@@ -85,10 +95,7 @@ export default function AdminHome() {
                 <h2>많이 만난 주제</h2>
               </div>
             </div>
-            <div className="empty-list">
-              <span aria-hidden="true">✦</span>
-              <p>아직 사용된 주제가 없습니다.</p>
-            </div>
+            <div className="theme-list">{data.themes.length ? data.themes.map((item) => <div key={item.theme}><span>{item.theme}</span><strong>{item.value}회</strong></div>) : <div><span>아직 사용된 주제가 없습니다.</span></div>}</div>
           </article>
 
           <article className="panel readiness-panel">
@@ -97,8 +104,8 @@ export default function AdminHome() {
             <ul>
               <li className="done"><span>✓</span> 사용자 사이트 공개</li>
               <li className="done"><span>✓</span> 관리자 사이트 보호</li>
-              <li><span>3</span> OpenAI API 연결</li>
-              <li><span>4</span> 이야기 통계 저장</li>
+              <li className="done"><span>✓</span> OpenAI API 연결</li>
+              <li className="done"><span>✓</span> 이야기 통계 저장</li>
             </ul>
           </article>
         </section>

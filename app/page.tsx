@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <main className="home">
@@ -12,23 +14,23 @@ export default function Home() {
         <p className="eyebrow">오늘은 어떤 이야기를 만나볼까요?</p>
         <h2 id="feature-title">이야기 방을 골라주세요</h2>
         <div className="feature-grid">
-          <button className="feature-card conversation" type="button">
+          <Link className="feature-card conversation" href="/conversation">
             <span className="feature-icon" aria-hidden="true">☾</span>
             <span className="feature-name">동화 대화</span>
             <span className="feature-description">
               목소리로 이야기를 만들고<br />끊김 없이 계속 이어가요
             </span>
             <span className="feature-action">이야기 시작하기</span>
-          </button>
+          </Link>
 
-          <button className="feature-card writer" type="button">
+          <Link className="feature-card writer" href="/writer">
             <span className="feature-icon" aria-hidden="true">✦</span>
             <span className="feature-name">동화 작가</span>
             <span className="feature-description">
               매일 새로운 주제의 동화를<br />책장처럼 넘겨 읽어요
             </span>
             <span className="feature-action">오늘의 동화 만나기</span>
-          </button>
+          </Link>
         </div>
       </section>
     </main>
