@@ -13,8 +13,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://storybook-dad-korea.jojojojo.chatgpt.site"),
   title: "동화나라 아이아빠",
   description: "아빠와 아이가 목소리로 이어 가고, 매일 새로운 동화를 만나는 공간",
+  openGraph: {
+    title: "동화나라 아이아빠",
+    description: "동화 대화와 동화 작가, 두 개의 이야기 방을 만나보세요.",
+    images: ["/og.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "동화나라 아이아빠",
+    description: "동화 대화와 동화 작가, 두 개의 이야기 방을 만나보세요.",
+    images: ["/og.png"],
+  },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
