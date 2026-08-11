@@ -1,55 +1,36 @@
 "use client";
 
-import Link from "next/link";
 import { useRef, useState } from "react";
 import { getAnonymousId } from "../lib/anonymous-id";
 
+type Recognition = { lang: string; interimResults: boolean; continuous: boolean; start(): void; stop(): void; onresult: ((event: { results: ArrayLike<{ 0: { transcript: string } }> }) => void) | null; onerror: (() => void) | null; onend: (() => void) | null };
+
 export default function ConversationPage() {
-  const [status, setStatus] = useState<"idle" | "connecting" | "live" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "listening" | "thinking" | "speaking" | "error">("idle");
   const [message, setMessage] = useState("버튼을 누르고 동화의 첫 장면을 말해보세요.");
-  const peerRef = useRef<RTCPeerConnection | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const historyRef = useRef<string[]>([]); const recognitionRef = useRef<Recognition | null>(null);
 
-  async function start() {
-    try {
-      setStatus("connecting"); setMessage("마이크와 이야기 친구를 연결하고 있어요…");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const pc = new RTCPeerConnection();
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-      pc.ontrack = (event) => { if (audioRef.current) audioRef.current.srcObject = event.streams[0]; };
-      const channel = pc.createDataChannel("oai-events");
-      channel.onopen = () => channel.send(JSON.stringify({ type: "response.create", response: { instructions: "먼저 다정하게 인사하고, 어떤 동화를 함께 만들어 볼지 한국어로 짧게 물어보세요." } }));
-      channel.onmessage = (event) => {
-        const data = JSON.parse(event.data) as { type?: string; error?: { message?: string } };
-        if (data.type === "error") setMessage(data.error?.message || "음성 대화 중 문제가 생겼어요.");
-      };
-      const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
-      const response = await fetch("/api/realtime/session", { method: "POST", headers: { "Content-Type": "application/sdp" }, body: offer.sdp });
-      if (!response.ok) throw new Error(await response.text());
-      await pc.setRemoteDescription({ type: "answer", sdp: await response.text() });
-      peerRef.current = pc; streamRef.current = stream; setStatus("live"); setMessage("이야기 친구가 듣고 있어요. 편하게 말해주세요.");
-      void fetch("/api/events", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ anonymousUserId: getAnonymousId(), eventType: "conversation_started" }) });
-    } catch (error) {
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-      setStatus("error"); setMessage(error instanceof Error ? error.message : "연결하지 못했어요. 마이크 권한을 확인해주세요.");
-    }
+  function listen() {
+    const SpeechRecognition = (window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition }).SpeechRecognition || (window as unknown as { webkitSpeechRecognition?: new () => Recognition }).webkitSpeechRecognition;
+    if (!SpeechRecognition) { setStatus("error"); setMessage("이 브라우저는 음성인식을 지원하지 않아요. Chrome에서 이용해주세요."); return; }
+    window.speechSynthesis.cancel(); const recognition = new SpeechRecognition(); recognition.lang = "ko-KR"; recognition.interimResults = false; recognition.continuous = false;
+    recognition.onresult = async (event) => {
+      const spoken = event.results[0]?.[0]?.transcript?.trim(); if (!spoken) return;
+      setStatus("thinking"); setMessage(`“${spoken}” 다음 이야기를 만들고 있어요…`);
+      try {
+        const response = await fetch("/api/conversation/respond", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: spoken, history: historyRef.current }) });
+        const data = await response.json() as { reply?: string; error?: string }; if (!response.ok || !data.reply) throw new Error(data.error);
+        historyRef.current = [...historyRef.current, `사용자: ${spoken}`, `이야기 친구: ${data.reply}`].slice(-10);
+        setMessage(data.reply); setStatus("speaking"); const utterance = new SpeechSynthesisUtterance(data.reply); utterance.lang = "ko-KR"; utterance.rate = 0.92; utterance.pitch = 1.05; utterance.onend = () => setStatus("idle"); window.speechSynthesis.speak(utterance);
+      } catch (error) { setStatus("error"); setMessage(error instanceof Error && error.message ? error.message : "이야기를 잇지 못했어요. 다시 말해주세요."); }
+    };
+    recognition.onerror = () => { setStatus("error"); setMessage("목소리를 듣지 못했어요. 마이크 권한을 확인해주세요."); };
+    recognition.onend = () => { recognitionRef.current = null; setStatus((current) => current === "listening" ? "idle" : current); };
+    recognitionRef.current = recognition; recognition.start(); setStatus("listening"); setMessage("듣고 있어요… 동화의 시작이나 ‘계속 이야기해줘’라고 말해보세요.");
+    if (!historyRef.current.length) void fetch("/api/events", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ anonymousUserId: getAnonymousId(), eventType: "conversation_started" }) });
   }
 
-  function stop() {
-    streamRef.current?.getTracks().forEach((track) => track.stop()); peerRef.current?.close();
-    streamRef.current = null; peerRef.current = null; setStatus("idle"); setMessage("대화가 끝났어요. 언제든 다시 이야기를 시작할 수 있어요.");
-  }
-
-  return <main className="room conversation-room">
-    <nav className="room-nav"><Link href="/">← 이야기 방</Link><span>동화 대화</span></nav>
-    <section className="voice-stage">
-      <p className="eyebrow">목소리로 이어가는 동화</p><h1>우리 이야기,<br />어디서 시작할까요?</h1>
-      <div className={`voice-orb ${status}`} aria-hidden="true"><span>☾</span><i /><i /></div>
-      <p className="voice-status" aria-live="polite">{message}</p>
-      {status === "live" ? <button className="primary stop" onClick={stop}>대화 끝내기</button> : <button className="primary" onClick={start} disabled={status === "connecting"}>{status === "connecting" ? "연결 중…" : "음성 동화 시작"}</button>}
-      <p className="privacy-note">마이크 음성은 대화를 위해 실시간 전송되며, 원본 음성은 StoryDaddy 데이터베이스에 저장하지 않습니다.</p>
-      <audio ref={audioRef} autoPlay />
-    </section>
-  </main>;
+  function stop() { recognitionRef.current?.stop(); window.speechSynthesis.cancel(); setStatus("idle"); setMessage("대화를 멈췄어요. 버튼을 누르면 다시 이어갈 수 있어요."); }
+  const active = status === "listening" || status === "thinking" || status === "speaking";
+  return <main className="room conversation-room"><nav className="room-nav"><a href="/">← 이야기 방</a><span>동화 대화</span></nav><section className="voice-stage"><p className="eyebrow">Gemini와 목소리로 이어가는 동화</p><h1>우리 이야기,<br />어디서 시작할까요?</h1><div className={`voice-orb ${active ? "live" : status}`} aria-hidden="true"><span>☾</span><i /><i /></div><p className="voice-status" aria-live="polite">{message}</p>{active ? <button className="primary stop" onClick={stop}>멈추기</button> : <button className="primary" onClick={listen}>목소리로 이야기하기</button>}<p className="privacy-note">음성인식은 브라우저 기능을 이용하며 StoryDaddy 서버에는 원본 음성을 저장하지 않습니다.</p></section></main>;
 }

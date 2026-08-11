@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { getAnonymousId } from "../lib/anonymous-id";
 
@@ -20,7 +19,7 @@ export default function WriterPage() {
     } catch (err) { setError(err instanceof Error ? err.message : "다시 시도해주세요."); } finally { setLoading(false); }
   }
   return <main className="room writer-room">
-    <nav className="room-nav"><Link href="/">← 이야기 방</Link><span>동화 작가</span></nav>
+    <nav className="room-nav"><a href="/">← 이야기 방</a><span>동화 작가</span></nav>
     {!story ? <section className="writer-form-wrap"><p className="eyebrow">매일 새로운 한 권</p><h1>오늘은 어떤 세계로<br />떠나볼까요?</h1>
       <form className="writer-form" onSubmit={generate}>
         <label>동화 주제<input name="theme" placeholder="예: 달빛을 모으는 작은 여우" maxLength={100} /></label>
