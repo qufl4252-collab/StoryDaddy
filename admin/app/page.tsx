@@ -81,7 +81,7 @@ export default function AdminHome() {
           <article className="panel api-panel" id="settings">
             <div className="panel-heading">
               <div>
-                <p className="eyebrow">OpenAI</p>
+                <p className="eyebrow">Google Gemini</p>
                 <h2>API 연결</h2>
               </div>
               <span className="status-dot connected">서버 연결</span>
@@ -89,7 +89,7 @@ export default function AdminHome() {
             <div className="api-body">
               <div className="key-icon" aria-hidden="true">•••</div>
               <h3>서버 비밀값으로 보호 중</h3>
-              <p>API 키는 화면과 데이터베이스에 노출하지 않고 사용자 서버에서만 OpenAI 요청에 사용합니다.</p>
+              <p>API 키는 화면과 데이터베이스에 노출하지 않고 사용자 서버에서만 Gemini 요청에 사용합니다.</p>
               <button type="button" disabled>연결됨</button>
               <small>키 값은 관리자 화면에서도 표시되지 않습니다.</small>
             </div>
@@ -111,7 +111,7 @@ export default function AdminHome() {
             <ul>
               <li className="done"><span>✓</span> 사용자 사이트 공개</li>
               <li className="done"><span>✓</span> 관리자 사이트 보호</li>
-              <li className="done"><span>✓</span> OpenAI API 연결</li>
+              <li className="done"><span>✓</span> Gemini 무료 API 연결</li>
               <li className="done"><span>✓</span> 이야기 통계 저장</li>
             </ul>
           </article>
