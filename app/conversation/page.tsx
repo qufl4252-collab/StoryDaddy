@@ -32,7 +32,7 @@ export default function ConversationPage() {
         if (!speech.ok) { const problem = await speech.json() as { error?: string }; throw new Error(problem.error); }
         const context = audioContextRef.current; if (!context) throw new Error("음성 재생을 준비하지 못했어요.");
         const audioBuffer = await context.decodeAudioData(await speech.arrayBuffer());
-        const source = context.createBufferSource(); source.buffer = audioBuffer; source.connect(context.destination); sourceRef.current = source;
+        const source = context.createBufferSource(); const voiceGain = context.createGain(); voiceGain.gain.value = Math.min(Math.max(Number(localStorage.getItem("dodam_voice_volume") ?? 100) / 100, 0), 1); source.buffer = audioBuffer; source.connect(voiceGain); voiceGain.connect(context.destination); sourceRef.current = source;
         const storySentences = data.reply.match(/[^.!?。！？]+[.!?。！？]?/g)?.map((sentence) => sentence.trim()).filter(Boolean) || [data.reply];
         const weights = storySentences.map((sentence) => Math.max(sentence.replace(/\s/g, "").length, 1)); const totalWeight = weights.reduce((sum, value) => sum + value, 0);
         setStoryText(data.reply); setReadingSentence(0); setMessage(""); setStatus("speaking");
