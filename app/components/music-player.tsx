@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-const tracks = Array.from({ length: 12 }, (_, index) => `/music/dodam-${index + 1}.mp3`); const fadeSeconds = 6;
+const tracks = Array.from({ length: 12 }, (_, index) => `https://raw.githubusercontent.com/qufl4252-collab/StoryDaddy/main/public/music/dodam-${index + 1}.mp3`); const fadeSeconds = 6;
 export default function MusicPlayer() {
   const [playing, setPlaying] = useState(false); const [open, setOpen] = useState(false); const [volume, setVolume] = useState(.18); const [voiceVolume, setVoiceVolume] = useState(100);
   const playersRef = useRef<HTMLAudioElement[]>([]); const activeRef = useRef(0); const trackRef = useRef(0); const fadingRef = useRef(false); const frameRef = useRef<number | null>(null);
