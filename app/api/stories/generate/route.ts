@@ -12,18 +12,20 @@ function apiKey() {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { anonymousUserId?: string; theme?: string; age?: string; mood?: string };
+    const body = (await request.json()) as { anonymousUserId?: string; theme?: string; age?: string; mood?: string; length?: number | string };
     if (!body.anonymousUserId) return Response.json({ error: "사용자 정보가 없습니다." }, { status: 400 });
 
     const theme = body.theme?.trim() || "오늘의 새로운 모험";
+    const requestedPages = Number(body.length);
+    const pageCount = requestedPages === 20 || requestedPages === 30 ? requestedPages : 15;
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey()}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: `당신은 잠들기 전 아빠가 아이에게 읽어주는 따뜻한 한국어 동화 작가입니다.\n주제: ${theme}\n대상 연령: ${body.age || "4~7세"}\n분위기: ${body.mood || "포근하고 신비롭게"}\n서로 자연스럽게 이어지는 10쪽 동화를 만드세요. 각 페이지는 반드시 짧은 1~2문장이고, 무섭거나 폭력적인 표현 없이 희망적인 결말로 끝냅니다.` }] }],
-        generationConfig: { responseMimeType: "application/json", responseJsonSchema: {
+        contents: [{ role: "user", parts: [{ text: `당신은 잠들기 전 아빠가 아이에게 읽어주는 따뜻한 한국어 동화 작가입니다.\n주제: ${theme}\n대상 연령: ${body.age || "4~7세"}\n분위기: ${body.mood || "포근하고 신비롭게"}\n서로 자연스럽게 이어지는 정확히 ${pageCount}쪽 분량의 완결된 동화를 만드세요. 각 페이지는 반드시 짧은 1~2문장이고, 페이지 사이의 사건이 자연스럽게 이어져야 합니다. 무섭거나 폭력적인 표현 없이 희망적인 결말로 끝냅니다.` }] }],
+        generationConfig: { maxOutputTokens: 6000, responseMimeType: "application/json", responseJsonSchema: {
           type: "object", additionalProperties: false, required: ["title", "theme", "pages"],
-          properties: { title: { type: "string" }, theme: { type: "string" }, pages: { type: "array", minItems: 10, maxItems: 10, items: { type: "string" } } },
+          properties: { title: { type: "string" }, theme: { type: "string" }, pages: { type: "array", minItems: pageCount, maxItems: pageCount, items: { type: "string" } } },
         } },
       }),
     });
@@ -31,7 +33,7 @@ export async function POST(request: Request) {
     const result = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
     const raw = result.candidates?.[0]?.content?.parts?.map((item) => item.text || "").join("") || "";
     const story = JSON.parse(raw) as Story;
-    if (!story.title || !Array.isArray(story.pages) || story.pages.length < 2) throw new Error("잘못된 동화 형식");
+    if (!story.title || !Array.isArray(story.pages) || story.pages.length !== pageCount) throw new Error("잘못된 동화 분량");
 
     await ensureDatabase();
     const db = getDb();
