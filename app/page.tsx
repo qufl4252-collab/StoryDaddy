@@ -12,7 +12,7 @@ export default function Home() {
         <p className="eyebrow">오늘은 어떤 이야기를 만나볼까요?</p>
         <h2 id="feature-title">이야기 방을 골라주세요</h2>
         <div className="feature-grid">
-          <a className="feature-card conversation" href="/conversation">
+          <a className="feature-card conversation" href="/conversation" target="_top">
             <span className="feature-icon" aria-hidden="true">☾</span>
             <span className="feature-name">동화 대화</span>
             <span className="feature-description">
@@ -21,7 +21,7 @@ export default function Home() {
             <span className="feature-action">이야기 시작하기</span>
           </a>
 
-          <a className="feature-card writer" href="/writer">
+          <a className="feature-card writer" href="/writer" target="_top">
             <span className="feature-icon" aria-hidden="true">✦</span>
             <span className="feature-name">동화 작가</span>
             <span className="feature-description">
