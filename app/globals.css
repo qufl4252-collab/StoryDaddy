@@ -126,6 +126,9 @@ h2 {
 .voice-orb span { font-size: 3rem; }.voice-orb i { position: absolute; inset: -.8rem; border: 1px solid #dcae81; border-radius: 50%; opacity: 0; }
 .voice-orb.live i { animation: voice-pulse 2s infinite; }.voice-orb.live i:last-child { animation-delay: 1s; }
 .voice-status { max-width: 31rem; min-height: 3rem; color: #6e5b4f; line-height: 1.6; }
+.spoken-story { width: min(100%, 38rem); margin: 0 0 1.5rem; padding: 1.35rem 1.5rem; border: 1px solid #eadcc8; border-radius: 1.2rem; background: rgb(255 253 247 / 88%); color: #55443a; font-size: clamp(1rem, 2.5vw, 1.18rem); line-height: 2; text-align: left; box-shadow: 0 .8rem 2.2rem rgb(82 58 38 / 6%); }
+.spoken-story span { padding: .12rem .08rem; border-radius: .22rem; transition: background-color .3s ease, color .3s ease, font-weight .3s ease; }
+.spoken-story span.reading { background: linear-gradient(transparent 18%, #ffe38a 18%, #ffe38a 88%, transparent 88%); color: #2f241e; font-weight: 800; }
 .primary { min-width: 14rem; padding: 1rem 1.5rem; border: 0; border-radius: 999px; background: #332a25; color: white; cursor: pointer; font: inherit; font-weight: 750; }.primary:disabled { cursor: wait; opacity: .55; }.primary.stop { background: #9c5c50; }
 .privacy-note { max-width: 35rem; margin-top: 1.5rem; color: #9a887c; font-size: .75rem; line-height: 1.5; }
 .writer-room { background: #fcf4d5; }.writer-form { display: grid; width: min(100%, 38rem); gap: 1rem; margin-top: 2.5rem; padding: 1.5rem; border: 1px solid rgb(74 54 34 / 10%); border-radius: 1.5rem; background: rgb(255 255 255 / 65%); text-align: left; box-shadow: 0 1.5rem 4rem rgb(89 60 35 / 8%); }
