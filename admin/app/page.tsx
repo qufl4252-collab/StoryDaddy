@@ -13,10 +13,22 @@ async function loadStats(): Promise<DashboardStats> {
 }
 
 const emptyStats: DashboardStats = { users: 0, stories: 0, todayStories: 0, conversations: 0, themes: [] };
+const voices = [
+  ["Sulafat", "술라파트 · 따뜻함"], ["Achird", "아키르드 · 친근함"], ["Achernar", "아케르나르 · 부드러움"], ["Vindemiatrix", "빈데미아트릭스 · 온화함"],
+  ["Kore", "코레 · 또렷하고 단단함"], ["Aoede", "아오이데 · 산뜻함"], ["Puck", "퍽 · 경쾌함"], ["Leda", "레다 · 젊고 밝음"],
+  ["Iapetus", "이아페투스 · 맑고 선명함"], ["Algieba", "알기에바 · 매끄러움"], ["Schedar", "셰다르 · 안정적임"], ["Gacrux", "가크룩스 · 성숙함"],
+] as const;
 
 export default function AdminHome() {
   const [data, setData] = useState<DashboardStats>(emptyStats);
-  useEffect(() => { void loadStats().then(setData); }, []);
+  const [voice, setVoice] = useState("Sulafat");
+  const [voiceStatus, setVoiceStatus] = useState("현재 설정을 불러오는 중입니다.");
+  useEffect(() => { void loadStats().then(setData); void fetch("/api/voice").then((response) => response.json()).then((result: { voice?: string }) => { if (result.voice) setVoice(result.voice); setVoiceStatus("현재 모든 사용자에게 적용 중입니다."); }).catch(() => setVoiceStatus("목소리 설정을 불러오지 못했습니다.")); }, []);
+  async function saveVoice() {
+    setVoiceStatus("저장 중입니다…");
+    const response = await fetch("/api/voice", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ voice }) });
+    setVoiceStatus(response.ok ? "저장되었습니다. 다음 낭독부터 적용됩니다." : "저장하지 못했습니다. 잠시 후 다시 시도해주세요.");
+  }
   const stats = [
     { label: "오늘 만든 동화", value: String(data.todayStories), change: "오늘 자정부터" },
     { label: "동화 대화", value: String(data.conversations), change: "누적 시작 횟수" },
@@ -92,6 +104,12 @@ export default function AdminHome() {
               <p>API 키는 화면과 데이터베이스에 노출하지 않고 사용자 서버에서만 Gemini 요청에 사용합니다.</p>
               <button type="button" disabled>연결됨</button>
               <small>키 값은 관리자 화면에서도 표시되지 않습니다.</small>
+            </div>
+            <div className="voice-settings">
+              <label htmlFor="tts-voice">동화 대화 목소리</label>
+              <select id="tts-voice" value={voice} onChange={(event) => setVoice(event.target.value)}>{voices.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
+              <button type="button" onClick={() => void saveVoice()}>이 목소리로 저장</button>
+              <small aria-live="polite">{voiceStatus}</small>
             </div>
           </article>
 

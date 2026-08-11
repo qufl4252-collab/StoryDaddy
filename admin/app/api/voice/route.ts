@@ -1,0 +1,12 @@
+const PUBLIC_API = "https://storybook-dad-korea.jojojojo.chatgpt.site/api/settings/voice";
+
+export async function GET() {
+  const response = await fetch(PUBLIC_API, { cache: "no-store" });
+  return new Response(response.body, { status: response.status, headers: { "Content-Type": "application/json" } });
+}
+
+export async function POST(request: Request) {
+  if (!process.env.ADMIN_SETTINGS_TOKEN) return Response.json({ error: "관리자 설정 연결이 필요합니다." }, { status: 500 });
+  const response = await fetch(PUBLIC_API, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.ADMIN_SETTINGS_TOKEN}` }, body: await request.text() });
+  return new Response(response.body, { status: response.status, headers: { "Content-Type": "application/json" } });
+}
