@@ -27,7 +27,7 @@ export default function ConversationPage() {
       try {
         const response = await fetch("/api/conversation/respond", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: spoken, history: historyRef.current }) });
         const data = await response.json() as { reply?: string; error?: string }; if (!response.ok || !data.reply) throw new Error(data.error);
-        historyRef.current = [...historyRef.current, `사용자: ${spoken}`, `이야기 친구: ${data.reply}`].slice(-10);
+        historyRef.current = [...historyRef.current, `사용자: ${spoken}`, `아기토끼: ${data.reply}`].slice(-10);
         const speech = await fetch("/api/conversation/speak", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: data.reply }) });
         if (!speech.ok) { const problem = await speech.json() as { error?: string }; throw new Error(problem.error); }
         const context = audioContextRef.current; if (!context) throw new Error("음성 재생을 준비하지 못했어요.");
@@ -35,7 +35,7 @@ export default function ConversationPage() {
         const source = context.createBufferSource(); source.buffer = audioBuffer; source.connect(context.destination); sourceRef.current = source;
         const storySentences = data.reply.match(/[^.!?。！？]+[.!?。！？]?/g)?.map((sentence) => sentence.trim()).filter(Boolean) || [data.reply];
         const weights = storySentences.map((sentence) => Math.max(sentence.replace(/\s/g, "").length, 1)); const totalWeight = weights.reduce((sum, value) => sum + value, 0);
-        setStoryText(data.reply); setReadingSentence(0); setMessage("Gemini가 동화를 읽어주고 있어요."); setStatus("speaking");
+        setStoryText(data.reply); setReadingSentence(0); setMessage(""); setStatus("speaking");
         const startedAt = context.currentTime;
         const updateHighlight = () => {
           const progress = Math.min((context.currentTime - startedAt) / audioBuffer.duration, 1); let accumulated = 0; let current = storySentences.length - 1;
@@ -54,5 +54,5 @@ export default function ConversationPage() {
 
   function stop() { recognitionRef.current?.stop(); sourceRef.current?.stop(); sourceRef.current = null; if (animationRef.current) cancelAnimationFrame(animationRef.current); animationRef.current = null; setReadingSentence(-1); setStatus("idle"); setMessage("대화를 멈췄어요. 버튼을 누르면 다시 이어갈 수 있어요."); }
   const active = status === "listening" || status === "thinking" || status === "speaking";
-  return <main className="room conversation-room"><nav className="room-nav"><a href="/">← 이야기 방</a><span>동화 대화</span></nav><section className="voice-stage"><p className="eyebrow">Gemini의 자연스러운 목소리로 이어가는 동화</p><h1>우리 이야기,<br />어디서 시작할까요?</h1><div className={`voice-orb ${active ? "live" : status}`} aria-hidden="true"><span>☾</span><i /><i /></div><p className="voice-status" aria-live="polite">{message}</p>{storyText && <div className="spoken-story" aria-label="생성된 동화">{sentences.map((sentence, index) => <span className={index === readingSentence ? "reading" : ""} key={`${index}-${sentence}`}>{sentence}{" "}</span>)}</div>}{active ? <button className="primary stop" onClick={stop}>멈추기</button> : <button className="primary" onClick={listen}>목소리로 이야기하기</button>}<p className="privacy-note">음성인식은 브라우저 기능을 이용하고, 이야기 낭독은 Gemini TTS가 담당합니다. 원본 음성은 저장하지 않습니다.</p></section></main>;
+  return <main className="room conversation-room"><nav className="room-nav"><a href="/">← 이야기 방</a><span>동화 대화</span></nav><section className="voice-stage"><p className="eyebrow">이야기 친구 아기토끼와 이어가는 동화</p><h1>우리 이야기,<br />어디서 시작할까요?</h1><div className={`voice-orb ${active ? "live" : status}`} aria-label="이야기 친구 아기토끼"><span>🐰</span><i /><i /></div>{message && <p className="voice-status" aria-live="polite">{message}</p>}{storyText && <div className="spoken-story" aria-label="아기토끼가 들려주는 동화">{sentences.map((sentence, index) => <span className={index === readingSentence ? "reading" : ""} key={`${index}-${sentence}`}>{sentence}{" "}</span>)}</div>}{active ? <button className="primary stop" onClick={stop}>멈추기</button> : <button className="primary" onClick={listen}>아기토끼와 이야기하기</button>}<p className="privacy-note">음성인식은 브라우저 기능을 이용하고, 이야기 낭독은 자연스러운 AI 음성이 담당합니다. 원본 음성은 저장하지 않습니다.</p></section></main>;
 }
