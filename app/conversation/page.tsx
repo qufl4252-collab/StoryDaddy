@@ -51,7 +51,7 @@ export default function ConversationPage() {
           for (let index = 0; index < weights.length; index += 1) { accumulated += weights[index] / totalWeight; if (progress <= accumulated) { current = index; break; } }
           setReadingSentence(current); if (progress < 1) animationRef.current = requestAnimationFrame(updateHighlight);
         };
-        source.onended = () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); animationRef.current = null; sourceRef.current = null; voiceGainRef.current = null; setReadingSentence(-1); setStatus("idle"); setMessage("동화를 다 읽었어요. 버튼을 누르면 다음 이야기를 이어갈 수 있어요."); };
+        source.onended = () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); animationRef.current = null; sourceRef.current = null; voiceGainRef.current = null; setReadingSentence(-1); setStatus("idle"); setMessage("이야기를 더 듣고 싶으면 버튼을 누르고 ‘응, 더 들려줘’라고 말해보세요."); };
         source.start(); animationRef.current = requestAnimationFrame(updateHighlight);
       } catch (error) { setStatus("error"); setMessage(error instanceof Error && error.message ? error.message : "이야기를 잇지 못했어요. 다시 말해주세요."); }
     };
