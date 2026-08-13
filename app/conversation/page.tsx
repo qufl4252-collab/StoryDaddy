@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getAnonymousId } from "../lib/anonymous-id";
 
 type Recognition = { lang: string; interimResults: boolean; continuous: boolean; start(): void; stop(): void; onresult: ((event: { results: ArrayLike<{ 0: { transcript: string } }> }) => void) | null; onerror: (() => void) | null; onend: (() => void) | null };
@@ -11,8 +11,17 @@ export default function ConversationPage() {
   const [storyText, setStoryText] = useState("");
   const [readingSentence, setReadingSentence] = useState(-1);
   const historyRef = useRef<string[]>([]); const recognitionRef = useRef<Recognition | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null); const sourceRef = useRef<AudioBufferSourceNode | null>(null); const animationRef = useRef<number | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null); const sourceRef = useRef<AudioBufferSourceNode | null>(null); const voiceGainRef = useRef<GainNode | null>(null); const animationRef = useRef<number | null>(null);
   const sentences = useMemo(() => storyText.match(/[^.!?。！？]+[.!?。！？]?/g)?.map((sentence) => sentence.trim()).filter(Boolean) || [], [storyText]);
+
+  useEffect(() => {
+    const updateVoiceVolume = (event: Event) => {
+      const value = (event as CustomEvent<number>).detail;
+      if (voiceGainRef.current && Number.isFinite(value)) voiceGainRef.current.gain.value = Math.min(Math.max(value / 100, 0), 1);
+    };
+    window.addEventListener("dodam-voice-volume", updateVoiceVolume);
+    return () => window.removeEventListener("dodam-voice-volume", updateVoiceVolume);
+  }, []);
 
   function listen() {
     const SpeechRecognition = (window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition }).SpeechRecognition || (window as unknown as { webkitSpeechRecognition?: new () => Recognition }).webkitSpeechRecognition;
@@ -32,7 +41,7 @@ export default function ConversationPage() {
         if (!speech.ok) { const problem = await speech.json() as { error?: string }; throw new Error(problem.error); }
         const context = audioContextRef.current; if (!context) throw new Error("음성 재생을 준비하지 못했어요.");
         const audioBuffer = await context.decodeAudioData(await speech.arrayBuffer());
-        const source = context.createBufferSource(); const voiceGain = context.createGain(); voiceGain.gain.value = Math.min(Math.max(Number(localStorage.getItem("dodam_voice_volume") ?? 100) / 100, 0), 1); source.buffer = audioBuffer; source.connect(voiceGain); voiceGain.connect(context.destination); sourceRef.current = source;
+        const source = context.createBufferSource(); const voiceGain = context.createGain(); voiceGain.gain.value = Math.min(Math.max(Number(localStorage.getItem("dodam_voice_volume") ?? 100) / 100, 0), 1); source.buffer = audioBuffer; source.connect(voiceGain); voiceGain.connect(context.destination); sourceRef.current = source; voiceGainRef.current = voiceGain;
         const storySentences = data.reply.match(/[^.!?。！？]+[.!?。！？]?/g)?.map((sentence) => sentence.trim()).filter(Boolean) || [data.reply];
         const weights = storySentences.map((sentence) => Math.max(sentence.replace(/\s/g, "").length, 1)); const totalWeight = weights.reduce((sum, value) => sum + value, 0);
         setStoryText(data.reply); setReadingSentence(0); setMessage(""); setStatus("speaking");
@@ -42,7 +51,7 @@ export default function ConversationPage() {
           for (let index = 0; index < weights.length; index += 1) { accumulated += weights[index] / totalWeight; if (progress <= accumulated) { current = index; break; } }
           setReadingSentence(current); if (progress < 1) animationRef.current = requestAnimationFrame(updateHighlight);
         };
-        source.onended = () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); animationRef.current = null; sourceRef.current = null; setReadingSentence(-1); setStatus("idle"); setMessage("동화를 다 읽었어요. 버튼을 누르면 다음 이야기를 이어갈 수 있어요."); };
+        source.onended = () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); animationRef.current = null; sourceRef.current = null; voiceGainRef.current = null; setReadingSentence(-1); setStatus("idle"); setMessage("동화를 다 읽었어요. 버튼을 누르면 다음 이야기를 이어갈 수 있어요."); };
         source.start(); animationRef.current = requestAnimationFrame(updateHighlight);
       } catch (error) { setStatus("error"); setMessage(error instanceof Error && error.message ? error.message : "이야기를 잇지 못했어요. 다시 말해주세요."); }
     };
@@ -52,7 +61,7 @@ export default function ConversationPage() {
     if (!historyRef.current.length) void fetch("/api/events", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ anonymousUserId: getAnonymousId(), eventType: "conversation_started" }) });
   }
 
-  function stop() { recognitionRef.current?.stop(); sourceRef.current?.stop(); sourceRef.current = null; if (animationRef.current) cancelAnimationFrame(animationRef.current); animationRef.current = null; setReadingSentence(-1); setStatus("idle"); setMessage("대화를 멈췄어요. 버튼을 누르면 다시 이어갈 수 있어요."); }
+  function stop() { recognitionRef.current?.stop(); sourceRef.current?.stop(); sourceRef.current = null; voiceGainRef.current = null; if (animationRef.current) cancelAnimationFrame(animationRef.current); animationRef.current = null; setReadingSentence(-1); setStatus("idle"); setMessage("대화를 멈췄어요. 버튼을 누르면 다시 이어갈 수 있어요."); }
   const active = status === "listening" || status === "thinking" || status === "speaking";
   return <main className="room conversation-room"><nav className="room-nav"><a href="/">← 이야기 방</a><span>동화 대화</span></nav><section className="voice-stage"><p className="eyebrow">이야기 친구 아기토끼와 이어가는 동화</p><h1>우리 이야기,<br />어디서 시작할까요?</h1><div className={`voice-orb ${active ? "live" : status}`} aria-label="이야기 친구 아기토끼"><span>🐰</span><i /><i /></div>{message && <p className="voice-status" aria-live="polite">{message}</p>}{storyText && <div className="spoken-story" aria-label="아기토끼가 들려주는 동화">{sentences.map((sentence, index) => <span className={index === readingSentence ? "reading" : ""} key={`${index}-${sentence}`}>{sentence}{" "}</span>)}</div>}{active ? <button className="primary stop" onClick={stop}>멈추기</button> : <button className="primary" onClick={listen}>아기토끼와 이야기하기</button>}<p className="privacy-note">음성인식은 브라우저 기능을 이용하고, 이야기 낭독은 자연스러운 AI 음성이 담당합니다. 원본 음성은 저장하지 않습니다.</p></section></main>;
 }
