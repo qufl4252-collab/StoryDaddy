@@ -24,7 +24,7 @@ export default function MusicPlayer() {
 
   const ensurePlayers = useCallback(() => {
     if (!playersRef.current.length) {
-      playersRef.current = [new Audio(tracks[0]), new Audio(tracks[1])];
+      playersRef.current = [new Audio(), new Audio()];
       playersRef.current.forEach((audio) => {
         audio.preload = "auto";
       });
@@ -100,8 +100,9 @@ export default function MusicPlayer() {
     const savedVoice = savedVoiceValue === null ? Number.NaN : Number(savedVoiceValue);
     const savedEnabled = localStorage.getItem("dodam_music_enabled");
     const shouldPlay = savedEnabled !== "false";
+    trackRef.current = Math.floor(Math.random() * tracks.length);
     queueMicrotask(() => {
-      if (Number.isFinite(savedMusic) && savedMusic >= 0) setVolume(Math.min(savedMusic, 50) / 100);
+      if (Number.isFinite(savedMusic) && savedMusic >= 0) setVolume(Math.min(savedMusic, 100) / 100);
       if (Number.isFinite(savedVoice) && savedVoice >= 0) setVoiceVolume(Math.min(savedVoice, 100));
       setEnabled(shouldPlay);
     });
@@ -157,7 +158,7 @@ export default function MusicPlayer() {
     <button className="settings-button" type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-label="음량 설정">⚙ 설정</button>
     {open && <section className="sound-panel">
       <strong>음량</strong>
-      <label><span>배경음 <b>{Math.round(volume * 100)}%</b></span><input type="range" min="0" max="50" value={Math.round(volume * 100)} onChange={(event) => changeMusic(Number(event.target.value))} /></label>
+      <label><span>배경음 <b>{Math.round(volume * 100)}%</b></span><input type="range" min="0" max="100" value={Math.round(volume * 100)} onChange={(event) => changeMusic(Number(event.target.value))} /></label>
       <label><span>동화 낭독 목소리 <b>{voiceVolume}%</b></span><input type="range" min="0" max="100" value={voiceVolume} onChange={(event) => changeVoice(Number(event.target.value))} /></label>
       <small>아기토끼가 읽어주는 AI 목소리 음량입니다. 마이크 입력 음량과는 무관합니다.</small>
       <button className="music-switch" type="button" onClick={() => void toggle()}>{enabled ? "♫ 배경음 끄기" : "♪ 배경음 켜기"}</button>
