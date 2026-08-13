@@ -23,7 +23,7 @@ export default function AdminHome() {
   const [data, setData] = useState<DashboardStats>(emptyStats);
   const [voice, setVoice] = useState("Sulafat");
   const [voiceStatus, setVoiceStatus] = useState("현재 설정을 불러오는 중입니다.");
-  const [musicVolume, setMusicVolume] = useState(18);
+  const [musicVolume, setMusicVolume] = useState(50);
   const [musicStatus, setMusicStatus] = useState("현재 설정을 불러오는 중입니다.");
   useEffect(() => { void loadStats().then(setData); void fetch("/api/music").then((response) => response.json()).then((result: { volume?: number }) => { if (typeof result.volume === "number") setMusicVolume(result.volume); setMusicStatus("현재 모든 사용자에게 적용 중입니다."); }).catch(() => setMusicStatus("음량 설정을 불러오지 못했습니다.")); void fetch("/api/voice").then((response) => response.json()).then((result: { voice?: string }) => { if (result.voice) setVoice(result.voice); setVoiceStatus("현재 모든 사용자에게 적용 중입니다."); }).catch(() => setVoiceStatus("목소리 설정을 불러오지 못했습니다.")); }, []);
   async function saveVoice() {
@@ -114,7 +114,7 @@ export default function AdminHome() {
               <button type="button" onClick={() => void saveVoice()}>이 목소리로 저장</button>
               <small aria-live="polite">{voiceStatus}</small>
               <label htmlFor="music-volume">배경음 기본 음량 · {musicVolume}%</label>
-              <input id="music-volume" type="range" min="0" max="50" value={musicVolume} onChange={(event) => setMusicVolume(Number(event.target.value))} />
+              <input id="music-volume" type="range" min="0" max="100" value={musicVolume} onChange={(event) => setMusicVolume(Number(event.target.value))} />
               <button type="button" onClick={() => void saveMusicVolume()}>배경음 음량 저장</button>
               <small aria-live="polite">{musicStatus}</small>
             </div>
